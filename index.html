@@ -14,7 +14,7 @@
   .card{ padding:20px; border:1px solid var(--ring); border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.05); }
   label{ font-weight:600; }
   .options label{ display:block; margin:8px 0; font-weight:600; }
-  input[type="number"]{ padding:8px; border-radius:6px; border:1px solid var(--ring); }
+  input[type="number"]{ padding:4px; border-radius:6px; border:1px solid var(--ring); width:120px; font-size:0.9rem; margin-left:6px; }
   input[type="range"]{ width:100%; accent-color:var(--maroon); }
   .results{ display:flex; gap:20px; margin-top:10px; }
   .stat{ flex:1; background:#fafafa; border:1px solid var(--ring); padding:12px; border-radius:10px; }
@@ -27,6 +27,8 @@
   footer{ margin-top:20px; font-size:.9rem; color:var(--muted); text-align:center; }
   .help-icon{ display:inline-block; margin-left:6px; background:#ccc; color:#000; font-weight:800; border-radius:50%; width:20px; height:20px; line-height:20px; text-align:center; cursor:pointer; border:none; font-size:.9rem; }
   .slider-box{ display:none; margin-top:8px; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px; }
+  .extra-info{ margin-top:15px; font-size:0.95rem; }
+  .extra-info p{ margin:4px 0; }
 </style>
 </head>
 <body>
@@ -44,16 +46,26 @@
         <label><input type="radio" name="payOption" value="2836.90" checked> Statement Balance: $2836.90</label>
         <label><input type="radio" name="payOption" value="2875.11"> Current Balance: $2875.11</label>
         <label><input type="radio" name="payOption" value="28.00"> Minimum Payment Due: $28.00</label>
+        
+        <!-- Other Amount -->
         <label>
           <input type="radio" name="payOption" value="other"> Other Amount:
-          <button type="button" class="help-icon" id="sliderHelp" aria-controls="sliderBox" aria-expanded="false" aria-label="Set a custom payment amount">?</button>
-        </label>
-        <!-- Hidden slider box (enabled inputs; just hidden by default) -->
-        <div class="slider-box" id="sliderBox">
-          <p style="margin:0 0 8px;">Select a custom payment amount:</p>
           <input id="paymentInput" type="number" min="0" max="100000" step="1" value="500" />
+          <button type="button" class="help-icon" id="sliderHelp" aria-controls="sliderBox" aria-expanded="false">?</button>
+        </label>
+
+        <!-- Hidden slider box -->
+        <div class="slider-box" id="sliderBox">
+          <p>If you pay <strong>$<span id="descPayment">500</span></strong> a month and make no more charges you will pay off this balance in approx. <strong><span id="descYears">—</span> years</strong> for a total of <strong>$<span id="descTotal">—</span></strong>.</p>
           <input id="paymentRange" type="range" min="0" max="3000" step="10" value="500" />
         </div>
+      </div>
+
+      <!-- Extra Info -->
+      <div class="extra-info">
+        <p><strong>Pay from:</strong> Bank of America Checking ****1234</p>
+        <p><strong>Payment due:</strong> 05/20/2024</p>
+        <p><strong>Payment date:</strong> 04/24/2014</p>
       </div>
     </section>
 
@@ -75,12 +87,10 @@
 </div>
 
 <script>
-  // ---- Config ----
   const INITIAL_BALANCE = 2836.90;
-  const YEARS_DIVISOR   = 200;   // (remaining)/200
-  const INTEREST_MULT   = 1.4;   // (remaining)*1.4
+  const YEARS_DIVISOR   = 200;
+  const INTEREST_MULT   = 1.4;
 
-  // ---- Elements ----
   const paymentRange = document.getElementById('paymentRange');
   const paymentInput = document.getElementById('paymentInput');
   const yearsOut     = document.getElementById('yearsOut');
@@ -89,8 +99,10 @@
   const progLabel    = document.getElementById('progLabel');
   const sliderBox    = document.getElementById('sliderBox');
   const sliderHelp   = document.getElementById('sliderHelp');
+  const descPayment  = document.getElementById('descPayment');
+  const descYears    = document.getElementById('descYears');
+  const descTotal    = document.getElementById('descTotal');
 
-  // ---- Math ----
   function compute(payment){
     const pay = Math.max(0, Math.min(Number(payment)||0, INITIAL_BALANCE));
     const remaining = INITIAL_BALANCE - pay;
@@ -102,42 +114,37 @@
     };
   }
 
-  // ---- Qualtrics postMessage ----
   function sendToQualtrics(payment) {
     if (window.parent && window.parent.postMessage) {
       window.parent.postMessage({ type: "paymentChoice", value: payment }, "*");
     }
   }
 
-  // ---- Render ----
   function render(payment){
     const {pay, years, total, progress} = compute(payment);
 
-    // keep inputs in sync
-    if (pay > Number(paymentRange.max)) paymentRange.max = Math.ceil(pay);
     paymentRange.value = pay;
     paymentInput.value = pay;
 
     yearsOut.textContent = `${years.toFixed(2)} yrs`;
     totalOut.textContent = `$${total.toFixed(2)}`;
+    descPayment.textContent = pay.toFixed(2);
+    descYears.textContent = years.toFixed(2);
+    descTotal.textContent = total.toFixed(2);
 
     const pct = Math.round(progress * 100);
     fillEl.style.width = `${pct}%`;
     progLabel.textContent = `${pct}%`;
 
     sendToQualtrics(pay);
-    console.log("Rendered with payment:", pay);
   }
 
-  // ---- Events: slider + number ----
   paymentRange.addEventListener('input', e => render(+e.target.value));
   paymentInput.addEventListener('input', e => render(+e.target.value));
 
-  // ---- Events: radio options ----
   document.querySelectorAll('input[name="payOption"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (radio.value === 'other') {
-        // don't force open; let ? control visibility
         render(+paymentInput.value);
       } else {
         render(+radio.value);
@@ -145,14 +152,12 @@
     });
   });
 
-  // ---- Toggle the slider box via ? ----
   sliderHelp.addEventListener('click', () => {
     const isHidden = window.getComputedStyle(sliderBox).display === 'none';
     sliderBox.style.display = isHidden ? 'block' : 'none';
     sliderHelp.setAttribute('aria-expanded', String(isHidden));
   });
 
-  // ---- Init ----
   const checked = document.querySelector('input[name="payOption"]:checked');
   render(checked && checked.value !== 'other' ? +checked.value : +paymentInput.value);
 </script>
