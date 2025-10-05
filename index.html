@@ -184,7 +184,7 @@
         <!-- Other Amount -->
         <label>
           <input type="radio" name="payOption" value="other"> Other Amount (Must be greater than $38):
-          <input id="paymentInput" type="number" min="38" max="1875.11" step="1" placeholder="Enter amount" />
+          <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
         </label>
       </div>
       
@@ -288,16 +288,27 @@
   //   }
   // }
 
+  function updateDisplay(pay, total) {
+    const formattedPay = pay.toFixed(2);
+    const formattedTotal = total.toFixed(2);
+
+    totalOut.textContent   = `$${formattedTotal}`;
+    descPayment.textContent = formattedPay;
+    descTotal.textContent   = formattedTotal;
+    paymentRange.value      = Math.min(pay, CURRENT_BALANCE).toFixed(2);
+    paymentInput.value      = formattedPay;
+  }
+
+
   function render(payment){
-    // --- safety guard: do nothing if no user input ---
     if (!payment || isNaN(payment) || payment <= 0) return;
-    
+  
     const { pay, years, total } = compute(payment);
 
-    paymentRange.value = pay;
-    paymentInput.value = pay;
+    // Update slider and number input + displayed values
+    updateDisplay(pay, total);
 
-    // “Paid Off (100 %)” text when full balance is paid
+    // Handle payoff text
     if (pay >= CURRENT_BALANCE * 0.999) {
       yearsOut.textContent = "Paid Off (100%)";
       descYears.textContent = "0";
@@ -308,11 +319,8 @@
       yearsOut.textContent = `${years.toFixed(2)} yrs`;
       descYears.textContent = years.toFixed(2);
     }
-
-    totalOut.textContent = `$${total.toFixed(2)}`;
-    descPayment.textContent = pay.toFixed(2);
-    descTotal.textContent = total.toFixed(2);
   }
+
 
   // --- Event Listeners (re-added and simplified) ---
 
