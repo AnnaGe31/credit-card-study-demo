@@ -167,8 +167,7 @@
   <header>
     <h1>Credit Card Payment Calculator</h1>
     <p class="sub">
-      Enter or select a payment amount to see how long it would take to pay off your <strong>current balance</strong>.
-      <br>(For research demo only — no data collected.)
+      Click a payment option to view the total payoff time and total payment amount. Afterwards, please make your payment choice below this calculator.
     </p>
   </header>
 
@@ -177,22 +176,24 @@
     <section aria-labelledby="options-title">
       <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">Choose Your Monthly Payment Amount</h2>
       <!-- Updated balance options (Oct 2025 study version) -->
-      <label><input type="radio" name="payOption" value="1836.90"> Statement Balance (as of 10/1/25): $1836.90</label>
-      <label><input type="radio" name="payOption" value="1875.11"> Current Balance (as of 10/1/25): $1875.11</label>
-      <label><input type="radio" name="payOption" value="38.00"> Minimum Payment Due: $38.00</label>
+      <div class="options">
+        <label><input type="radio" name="payOption" value="1836.90"> Statement Balance (as of 10/1/25): $1836.90</label>
+        <label><input type="radio" name="payOption" value="1875.11"> Current Balance (as of 10/1/25): $1875.11</label>
+        <label><input type="radio" name="payOption" value="38.00"> Minimum Payment Due: $38.00</label>
 
-      <!-- Other Amount -->
-      <label>
-        <input type="radio" name="payOption" value="other"> Other Amount (Must be greater than $38):
-        <input id="paymentInput" type="number" min="38" max="1875.11" step="1" value="500" />
-      </label>
-
+        <!-- Other Amount -->
+        <label>
+          <input type="radio" name="payOption" value="other"> Other Amount (Must be greater than $38):
+          <input id="paymentInput" type="number" min="38" max="1875.11" step="1" placeholder="Enter amount" />
+        </label>
+      </div>
+      
       <!-- Hidden slider box -->
       <div class="slider-box" id="sliderBox">
-        <p>If you pay <strong>$<span id="descPayment">500</span></strong> each month and make no new charges, you will pay 
+        <p>If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges, you will pay 
           off your current balance in about <strong><span id="descYears">—</span> years</strong>, for a total payment of
           <strong>$<span id="descTotal">—</span></strong>.</p>
-        <input id="paymentRange" type="range" min="38" max="1875.11" step="10" value="500" />
+        <input id="paymentRange" type="range" min="38" max="1875.11" step="10" value="38" />
       </div>
     
       <!-- Bank account & due-date details removed per Oct 2025 study version -->
@@ -262,20 +263,23 @@
 
     // prevent infinite debt if payment ≤ interest
     if (monthlyPayment <= balance * MONTHLY_RATE) {
-      return { pay: monthlyPayment, years: Infinity, total: Infinity, progress: 0 };
+      return { pay: monthlyPayment, years: Infinity, total: Infinity };
+    }  
+
+    // if payment covers the entire balance, treat as instant payoff
+    if (monthlyPayment >= balance) {
+      return { pay: monthlyPayment, years: 0, total: balance };
     }
 
-    // n = log(P / (P − rB)) / log(1 + r)
+    // amortization logic
     const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) /
                  Math.log(1 + MONTHLY_RATE);
     const years = months / 12;
-    const total = monthlyPayment * months;
+    const total = Math.min(monthlyPayment * months, balance);
 
-    // progress = fraction of balance repaid in one year (for bar display)
-    const progress = Math.min((monthlyPayment * 12) / balance, 1);
-
-    return { pay: monthlyPayment, years, total, progress };
+    return { pay: monthlyPayment, years, total };
   }
+
 
 
   // function sendToQualtrics(payment) {
@@ -285,34 +289,31 @@
   // }
 
   function render(payment){
-    const {pay, years, total, progress} = compute(payment);
+    // --- safety guard: do nothing if no user input ---
+    if (!payment || isNaN(payment) || payment <= 0) return;
+    
+    const { pay, years, total } = compute(payment);
 
     paymentRange.value = pay;
     paymentInput.value = pay;
 
-    yearsOut.textContent = `${years.toFixed(2)} yrs`;
+    // “Paid Off (100 %)” text when full balance is paid
+    if (pay >= CURRENT_BALANCE * 0.999) {
+      yearsOut.textContent = "Paid Off (100%)";
+      descYears.textContent = "0";
+    } else if (!isFinite(years)) {
+      yearsOut.textContent = "—";
+      descYears.textContent = "—";
+    } else {
+      yearsOut.textContent = `${years.toFixed(2)} yrs`;
+      descYears.textContent = years.toFixed(2);
+    }
+
     totalOut.textContent = `$${total.toFixed(2)}`;
     descPayment.textContent = pay.toFixed(2);
-    descYears.textContent = years.toFixed(2);
     descTotal.textContent = total.toFixed(2);
-
-    const pct = Math.round(progress * 100);
-    // fillEl.style.width = `${pct}%`;
-    // progLabel.textContent = `${pct}%`;
   }
 
-  paymentRange.addEventListener('input', e => render(+e.target.value));
-  paymentInput.addEventListener('input', e => render(+e.target.value));
-
-  document.querySelectorAll('input[name="payOption"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      if (radio.value === 'other') {
-        render(+paymentInput.value);
-      } else {
-        render(+radio.value);
-      }
-    });
-  });
 
   // sliderHelp.addEventListener('click', () => {
   //   const isHidden = window.getComputedStyle(sliderBox).display === 'none';
