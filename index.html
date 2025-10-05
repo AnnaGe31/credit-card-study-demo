@@ -293,7 +293,7 @@
     const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) /
                  Math.log(1 + MONTHLY_RATE);
     const years = months / 12;
-    const total = Math.min(monthlyPayment * months, balance);
+    const total = monthlyPayment * months;
 
     return { pay: monthlyPayment, years, total };
   }
