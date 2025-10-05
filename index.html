@@ -174,26 +174,41 @@
   <main class="card" role="region" aria-label="Calculator">
     <!-- Payment Options -->
     <section aria-labelledby="options-title">
-      <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">Choose Your Monthly Payment Amount</h2>
-      <!-- Updated balance options (Oct 2025 study version) -->
+      <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">
+        Choose Your Monthly Payment Amount
+      </h2>
+
       <div class="options">
-        <label><input type="radio" name="payOption" value="1836.90"> Statement Balance (as of 10/1/25): $1836.90</label>
-        <label><input type="radio" name="payOption" value="1875.11"> Current Balance (as of 10/1/25): $1875.11</label>
-        <label><input type="radio" name="payOption" value="38.00"> Minimum Payment Due: $38.00</label>
+        <label>
+          <input type="radio" name="payOption" value="1836.90">
+          Statement Balance (as of 10/1/25): $1836.90
+        </label>
+        <label>
+          <input type="radio" name="payOption" value="1875.11">
+          Current Balance (as of 10/1/25): $1875.11
+        </label>
+        <label>
+          <input type="radio" name="payOption" value="38.00">
+          Minimum Payment Due: $38.00
+        </label>
 
         <!-- Other Amount -->
         <label>
-          <input type="radio" name="payOption" value="other"> Other Amount (Must be greater than $38):
-          <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
+          <input type="radio" name="payOption" value="other">
+          Other Amount (Must be greater than $38):
+          <input id="paymentInput" type="number" min="38" max="1875.11" step="0.01" placeholder="Enter amount" />
         </label>
       </div>
-      
-      <!-- Hidden slider box -->
+
+      <!-- Slider box -->
       <div class="slider-box" id="sliderBox">
-        <p>If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges, you will pay 
-          off your current balance in about <strong><span id="descYears">—</span> years</strong>, for a total payment of
-          <strong>$<span id="descTotal">—</span></strong>.</p>
-        <input id="paymentRange" type="range" min="38" max="1875.11" step="10" value="38" />
+        <p>
+          If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges,
+          you will pay off your current balance in about
+          <strong><span id="descYears">—</span> years</strong>,
+          for a total payment of <strong>$<span id="descTotal">—</span></strong>.
+        </p>
+        <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
       </div>
     
       <!-- Bank account & due-date details removed per Oct 2025 study version -->
@@ -210,26 +225,29 @@
 
     <!-- Results -->
     <section aria-labelledby="results-title">
-      <h2 id="results-title" style="margin:16px 0 8px; font-size:1.1rem;">Estimated Payoff Summary</h2>
-        <div class="results" role="status" aria-live="polite">
-          <div class="stat">
-            <div class="k">Estimated Time to Pay Off</div>
-            <div class="v" id="yearsOut">—</div>
-          </div>
-          <div class="stat">
-            <div class="k">Total Amount Paid (Principal + Interest)</div>
-            <div class="v" id="totalOut">—</div>
-          </div>
+      <h2 id="results-title" style="margin:16px 0 8px; font-size:1.1rem;">
+        Estimated Payoff Summary
+      </h2>
+      <div class="results" role="status" aria-live="polite">
+        <div class="stat">
+          <div class="k">Estimated Time to Pay Off</div>
+          <div class="v" id="yearsOut">—</div>
         </div>
+        <div class="stat">
+          <div class="k">Total Amount Paid (Principal + Interest)</div>
+          <div class="v" id="totalOut">—</div>
+        </div>
+      </div>
       <p style="font-size:0.9rem; color:#6b7280; margin-top:6px;">
         *Calculations assume a 21% annual interest rate and no additional charges.
       </p>
 
-
-      <!-- <div class="bar">
+      <!--
+      <div class="bar">
         <div class="lab"><span>Progress toward payoff</span><span id="progLabel">0%</span></div>
         <div class="track"><div class="fill" id="fill"></div></div>
-      </div> -->
+      </div>
+      -->
     </section>
   </main>
 
@@ -280,8 +298,6 @@
     return { pay: monthlyPayment, years, total };
   }
 
-
-
   // function sendToQualtrics(payment) {
   //   if (window.parent && window.parent.postMessage) {
   //     window.parent.postMessage({ type: "paymentChoice", value: payment }, "*");
@@ -298,7 +314,6 @@
     paymentRange.value      = Math.min(pay, CURRENT_BALANCE).toFixed(2);
     paymentInput.value      = formattedPay;
   }
-
 
   function render(payment){
     if (!payment || isNaN(payment) || payment <= 0) return;
@@ -321,13 +336,13 @@
     }
   }
 
-
   // --- Event Listeners (re-added and simplified) ---
 
   // Slider updates results dynamically
   paymentRange.addEventListener('input', e => {
-    if (!e.target.value) return;
-    render(+e.target.value);
+    let val = +e.target.value;
+    if (Math.abs(val - CURRENT_BALANCE) < 0.1) val = CURRENT_BALANCE;
+    render(val);
   });
 
   // Number input updates results dynamically
@@ -358,7 +373,8 @@
   // --- Wait for user interaction before showing results ---
   // This keeps the screen blank ("—") until someone selects a payment or moves the slider.
   // The first render() call will come from the event listeners below.
-  window.addEventListener('DOMContentLoaded', () => {     // Do nothing on load — wait for user input to trigger render()
+  window.addEventListener('DOMContentLoaded', () => {     
+    // Do nothing on load — wait for user input to trigger render()
   });
 </script>
 </body>
