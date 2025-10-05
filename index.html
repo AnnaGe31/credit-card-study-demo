@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Credit Card Payment Demo</title>
+
+<!-- Style  -->
 <style>
   :root{ --maroon:#8A100B; --gold:#EAAA00; --muted:#6b7280; --ring:#e5e7eb; }
   body{ font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; padding:20px; background:#fff; color:#111;}
@@ -30,6 +32,8 @@
   .extra-info{ margin-top:15px; font-size:0.95rem; }
   .extra-info p{ margin:4px 0; }
 </style>
+
+<!-- Main Body  -->
 </head>
 <body>
 <div class="wrap">
@@ -42,24 +46,23 @@
     <!-- Payment Options -->
     <section aria-labelledby="options-title">
       <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">Payment Amount</h2>
-      <div class="options">
-        <label><input type="radio" name="payOption" value="2836.90" checked> Statement Balance: $2836.90</label>
-        <label><input type="radio" name="payOption" value="2875.11"> Current Balance: $2875.11</label>
-        <label><input type="radio" name="payOption" value="28.00"> Minimum Payment Due: $28.00</label>
-        
-        <!-- Other Amount -->
-        <label>
-          <input type="radio" name="payOption" value="other"> Other Amount:
-          <input id="paymentInput" type="number" min="0" max="100000" step="1" value="500" />
-          <button type="button" class="help-icon" id="sliderHelp" aria-controls="sliderBox" aria-expanded="false">?</button>
-        </label>
+      <!-- Updated balance options (Oct 2025 study version) -->
+      <label><input type="radio" name="payOption" value="1836.90"> Statement Balance (as of 10/1/25): $1836.90</label>
+      <label><input type="radio" name="payOption" value="1875.11"> Current Balance (as of 10/1/25): $1875.11</label>
+      <label><input type="radio" name="payOption" value="38.00"> Minimum Payment Due: $38.00</label>
 
-        <!-- Hidden slider box -->
-        <div class="slider-box" id="sliderBox">
-          <p>If you pay <strong>$<span id="descPayment">500</span></strong> a month and make no more charges you will pay off this balance in approx. <strong><span id="descYears">—</span> years</strong> for a total of <strong>$<span id="descTotal">—</span></strong>.</p>
-          <input id="paymentRange" type="range" min="0" max="3000" step="10" value="500" />
-        </div>
+      <!-- Other Amount -->
+      <label>
+        <input type="radio" name="payOption" value="other"> Other Amount ($)
+        <input id="paymentInput" type="number" min="0" max="1875.11" step="1" value="500" />
+      </label>
+
+      <!-- Hidden slider box -->
+      <div class="slider-box" id="sliderBox">
+        <p>If you pay <strong>$<span id="descPayment">500</span></strong> a month and make no more charges you will pay off this balance in approx. <strong><span id="descYears">—</span> years</strong> for a total of <strong>$<span id="descTotal">—</span></strong>.</p>
+        <input id="paymentRange" type="range" min="0" max="3000" step="10" value="500" />
       </div>
+    
 
       <!-- Extra Info -->
       <div class="extra-info">
@@ -76,10 +79,10 @@
         <div class="stat"><div class="k">Years to Pay Off</div><div class="v" id="yearsOut">—</div></div>
         <div class="stat"><div class="k">Total Balance After Interest</div><div class="v" id="totalOut">—</div></div>
       </div>
-      <div class="bar">
+      <!-- <div class="bar">
         <div class="lab"><span>Progress toward payoff</span><span id="progLabel">0%</span></div>
         <div class="track"><div class="fill" id="fill"></div></div>
-      </div>
+      </div> -->
     </section>
   </main>
 
@@ -87,9 +90,12 @@
 </div>
 
 <script>
-  const INITIAL_BALANCE = 2836.90;
-  const YEARS_DIVISOR   = 200;
-  const INTEREST_MULT   = 1.4;
+  // --- Constants (Oct 2025 update) ---
+  const STATEMENT_BALANCE = 1836.90;
+  const CURRENT_BALANCE   = 1875.11;  // slider denominator / payoff base
+  const MIN_PAYMENT       = 38.00;
+  const ANNUAL_RATE       = 0.21;
+  const MONTHLY_RATE      = ANNUAL_RATE / 12;
 
   const paymentRange = document.getElementById('paymentRange');
   const paymentInput = document.getElementById('paymentInput');
@@ -103,16 +109,28 @@
   const descYears    = document.getElementById('descYears');
   const descTotal    = document.getElementById('descTotal');
 
+  // --- Updated payoff formula (uses amortization logic) ---
   function compute(payment){
-    const pay = Math.max(0, Math.min(Number(payment)||0, INITIAL_BALANCE));
-    const remaining = INITIAL_BALANCE - pay;
-    return {
-      pay,
-      years: remaining / YEARS_DIVISOR,
-      total: remaining * INTEREST_MULT,
-      progress: (INITIAL_BALANCE - remaining) / INITIAL_BALANCE
-    };
+    const balance = CURRENT_BALANCE;
+    const monthlyPayment = Math.max(0, Number(payment) || 0);
+
+    // prevent infinite debt if payment ≤ interest
+    if (monthlyPayment <= balance * MONTHLY_RATE) {
+      return { pay: monthlyPayment, years: Infinity, total: Infinity, progress: 0 };
+    }
+
+    // n = log(P / (P − rB)) / log(1 + r)
+    const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) /
+                 Math.log(1 + MONTHLY_RATE);
+    const years = months / 12;
+    const total = monthlyPayment * months;
+
+    // progress = fraction of balance repaid in one year (for bar display)
+    const progress = Math.min((monthlyPayment * 12) / balance, 1);
+
+    return { pay: monthlyPayment, years, total, progress };
   }
+
 
   function sendToQualtrics(payment) {
     if (window.parent && window.parent.postMessage) {
@@ -158,8 +176,8 @@
     sliderHelp.setAttribute('aria-expanded', String(isHidden));
   });
 
-  const checked = document.querySelector('input[name="payOption"]:checked');
-  render(checked && checked.value !== 'other' ? +checked.value : +paymentInput.value);
+  // start with slider reference based on current balance; no default choice
+  render(+paymentInput.value || CURRENT_BALANCE);
 </script>
 </body>
 </html>
