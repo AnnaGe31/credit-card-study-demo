@@ -314,6 +314,32 @@
     descTotal.textContent = total.toFixed(2);
   }
 
+  // --- Event Listeners (re-added and simplified) ---
+
+  // Slider updates results dynamically
+  paymentRange.addEventListener('input', e => {
+    if (!e.target.value) return;
+    render(+e.target.value);
+  });
+
+  // Number input updates results dynamically
+  paymentInput.addEventListener('input', e => {
+    if (!e.target.value) return;
+    render(+e.target.value);
+  });
+
+  // Radio buttons trigger render when selected
+  document.querySelectorAll('input[name="payOption"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (radio.value === 'other') {
+        const val = +paymentInput.value;
+        if (!val) return; // only update once number entered
+        render(val);
+      } else {
+        render(+radio.value);
+      }
+    });
+  });
 
   // sliderHelp.addEventListener('click', () => {
   //   const isHidden = window.getComputedStyle(sliderBox).display === 'none';
@@ -324,8 +350,7 @@
   // --- Wait for user interaction before showing results ---
   // This keeps the screen blank ("—") until someone selects a payment or moves the slider.
   // The first render() call will come from the event listeners below.
-  window.addEventListener('DOMContentLoaded', () => {
-    // Do nothing on load — wait for user input to trigger render()
+  window.addEventListener('DOMContentLoaded', () => {     // Do nothing on load — wait for user input to trigger render()
   });
 </script>
 </body>
