@@ -7,31 +7,157 @@
 
 <!-- Style  -->
 <style>
-  :root{ --maroon:#8A100B; --gold:#EAAA00; --muted:#6b7280; --ring:#e5e7eb; }
-  body{ font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; padding:20px; background:#fff; color:#111;}
-  .wrap{ max-width:900px; margin:0 auto; }
-  header{ margin-bottom:20px; }
-  h1{ color:var(--maroon); margin:0 0 6px; }
-  .sub{ color:var(--muted); margin:0; }
-  .card{ padding:20px; border:1px solid var(--ring); border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,.05); }
-  label{ font-weight:600; }
-  .options label{ display:block; margin:8px 0; font-weight:600; }
-  input[type="number"]{ padding:4px; border-radius:6px; border:1px solid var(--ring); width:120px; font-size:0.9rem; margin-left:6px; }
-  input[type="range"]{ width:100%; accent-color:var(--maroon); }
-  .results{ display:flex; gap:20px; margin-top:10px; }
-  .stat{ flex:1; background:#fafafa; border:1px solid var(--ring); padding:12px; border-radius:10px; }
-  .stat .k{ color:var(--muted); }
-  .stat .v{ font-size:1.6rem; font-weight:800; }
-  .bar{ margin-top:16px; }
-  .lab{ display:flex; justify-content:space-between; color:var(--muted); font-size:.95rem; margin-bottom:6px; }
-  .track{ height:12px; background:#eee; border-radius:8px; overflow:hidden; }
-  .fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--maroon),var(--gold)); }
-  footer{ margin-top:20px; font-size:.9rem; color:var(--muted); text-align:center; }
-  .help-icon{ display:inline-block; margin-left:6px; background:#ccc; color:#000; font-weight:800; border-radius:50%; width:20px; 
-             height:20px; line-height:20px; text-align:center; cursor:pointer; border:none; font-size:.9rem; }
-  .slider-box{ display:none; margin-top:8px; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px; }
-  .extra-info{ margin-top:15px; font-size:0.95rem; }
-  .extra-info p{ margin:4px 0; }
+  :root{ 
+    --maroon:#8A100B; 
+    --gold:#EAAA00; 
+    --muted:#6b7280; 
+    --ring:#e5e7eb; 
+  }
+  
+  body{ 
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+    margin:0; 
+    padding:20px; 
+    background:#fff; 
+    color:#111;}
+  
+  .wrap{ 
+    max-width:900px; 
+    margin:0 auto; 
+  }
+  
+  header{ 
+    margin-bottom:20px; 
+  }
+  
+  h1{ 
+    color:var(--maroon); 
+    margin:0 0 6px; 
+  }
+  
+  .sub{ 
+    color:var(--muted); 
+    margin:0; 
+  }
+  
+  .card{ 
+    padding:20px; 
+    border:1px solid var(--ring); 
+    border-radius:12px; 
+    box-shadow:0 2px 6px rgba(0,0,0,.05); 
+  }
+  
+  label{ 
+    font-weight:600; 
+  }
+  
+  .options label{ 
+    display:block; 
+    margin:8px 0; 
+    font-weight:600; 
+  }
+  
+  input[type="number"]{ 
+    padding:4px; 
+    border-radius:6px; 
+    border:1px solid var(--ring); 
+    width:120px; 
+    font-size:0.9rem; 
+    margin-left:6px; 
+  }
+  
+  input[type="range"]{ 
+    width:100%; 
+    accent-color:var(--maroon); 
+  }
+  
+  .results{ 
+    display:flex; 
+    gap:20px; 
+    margin-top:10px; 
+  }
+  
+  .stat{ 
+    flex:1; 
+    background:#fafafa; 
+    border:1px solid var(--ring); 
+    padding:12px; 
+    border-radius:10px; 
+  }
+  
+  .stat .k{ 
+    color:var(--muted); 
+  }
+  
+  .stat .v{ 
+    font-size:1.6rem; 
+    font-weight:800; 
+  }
+  
+  .bar{ 
+    margin-top:16px; 
+  }
+  
+  .lab{ 
+    display:flex; 
+    justify-content:space-between; 
+    color:var(--muted); 
+    font-size:.95rem; 
+    margin-bottom:6px; 
+  }
+  
+  .track{ 
+    height:12px; 
+    background:#eee; 
+    border-radius:8px; 
+    overflow:hidden; 
+  }
+  
+  .fill{ 
+    height:100%; 
+    width:0%; 
+    background:linear-gradient(90deg,var(--maroon),var(--gold)); 
+  }
+  
+  footer{ 
+    margin-top:20px; 
+    font-size:.9rem; 
+    color:var(--muted); 
+    text-align:center; 
+  }
+  
+  /* .help-icon{ 
+    display:inline-block; 
+    margin-left:6px; 
+    background:#ccc; 
+    color:#000; 
+    font-weight:800; 
+    border-radius:50%; 
+    width:20px; 
+    height:20px; 
+    line-height:20px; 
+    text-align:center; 
+    cursor:pointer; 
+    border:none; 
+    font-size:.9rem; 
+  } */
+  
+  .slider-box{ 
+    display:block; 
+    margin-top:8px; 
+    padding:10px; 
+    background:#f9f9f9; 
+    border:1px solid #ddd; 
+    border-radius:8px; 
+  }
+
+  /* .extra-info{ 
+    margin-top:15px; 
+    font-size:0.95rem; 
+  }
+  .extra-info p{ 
+    margin:4px 0; 
+  } */
 </style>
 
 <!-- Main Body  -->
@@ -71,11 +197,14 @@
     
       <!-- Bank account & due-date details removed per Oct 2025 study version -->
       <!-- Extra Info -->
+      <!--
       <div class="extra-info">
         <p><strong>Pay from:</strong> Bank of America Checking ****1234</p>
         <p><strong>Payment due:</strong> 05/20/2024</p>
         <p><strong>Payment date:</strong> 04/24/2014</p>
-      </div> -->
+      </div>
+      -->
+
     </section>
 
     <!-- Results -->
@@ -118,10 +247,10 @@
   const paymentInput = document.getElementById('paymentInput');
   const yearsOut     = document.getElementById('yearsOut');
   const totalOut     = document.getElementById('totalOut');
-  const fillEl       = document.getElementById('fill');
-  const progLabel    = document.getElementById('progLabel');
+  // const fillEl       = document.getElementById('fill');
+  // const progLabel    = document.getElementById('progLabel');
   const sliderBox    = document.getElementById('sliderBox');
-  const sliderHelp   = document.getElementById('sliderHelp');
+  // const sliderHelp   = document.getElementById('sliderHelp');
   const descPayment  = document.getElementById('descPayment');
   const descYears    = document.getElementById('descYears');
   const descTotal    = document.getElementById('descTotal');
@@ -149,11 +278,11 @@
   }
 
 
-  function sendToQualtrics(payment) {
-    if (window.parent && window.parent.postMessage) {
-      window.parent.postMessage({ type: "paymentChoice", value: payment }, "*");
-    }
-  }
+  // function sendToQualtrics(payment) {
+  //   if (window.parent && window.parent.postMessage) {
+  //     window.parent.postMessage({ type: "paymentChoice", value: payment }, "*");
+  //   }
+  // }
 
   function render(payment){
     const {pay, years, total, progress} = compute(payment);
@@ -168,10 +297,8 @@
     descTotal.textContent = total.toFixed(2);
 
     const pct = Math.round(progress * 100);
-    fillEl.style.width = `${pct}%`;
-    progLabel.textContent = `${pct}%`;
-
-    sendToQualtrics(pay);
+    // fillEl.style.width = `${pct}%`;
+    // progLabel.textContent = `${pct}%`;
   }
 
   paymentRange.addEventListener('input', e => render(+e.target.value));
@@ -187,13 +314,13 @@
     });
   });
 
-  sliderHelp.addEventListener('click', () => {
-    const isHidden = window.getComputedStyle(sliderBox).display === 'none';
-    sliderBox.style.display = isHidden ? 'block' : 'none';
-    sliderHelp.setAttribute('aria-expanded', String(isHidden));
-  });
+  // sliderHelp.addEventListener('click', () => {
+  //   const isHidden = window.getComputedStyle(sliderBox).display === 'none';
+  //   sliderBox.style.display = isHidden ? 'block' : 'none';
+  //   sliderHelp.setAttribute('aria-expanded', String(isHidden));
+  // });
 
-  // --- Optional: Wait for user interaction before showing results ---
+  // --- Wait for user interaction before showing results ---
   // This keeps the screen blank ("—") until someone selects a payment or moves the slider.
   // The first render() call will come from the event listeners below.
   window.addEventListener('DOMContentLoaded', () => {
