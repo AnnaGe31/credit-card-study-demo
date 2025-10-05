@@ -27,7 +27,8 @@
   .track{ height:12px; background:#eee; border-radius:8px; overflow:hidden; }
   .fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--maroon),var(--gold)); }
   footer{ margin-top:20px; font-size:.9rem; color:var(--muted); text-align:center; }
-  .help-icon{ display:inline-block; margin-left:6px; background:#ccc; color:#000; font-weight:800; border-radius:50%; width:20px; height:20px; line-height:20px; text-align:center; cursor:pointer; border:none; font-size:.9rem; }
+  .help-icon{ display:inline-block; margin-left:6px; background:#ccc; color:#000; font-weight:800; border-radius:50%; width:20px; 
+             height:20px; line-height:20px; text-align:center; cursor:pointer; border:none; font-size:.9rem; }
   .slider-box{ display:none; margin-top:8px; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px; }
   .extra-info{ margin-top:15px; font-size:0.95rem; }
   .extra-info p{ margin:4px 0; }
@@ -38,14 +39,17 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Credit Card Payment Demo</h1>
-    <p class="sub">Select a payment option and see payoff details. <span class="mono">(for research demo only)</span></p>
+    <h1>Credit Card Payment Calculator</h1>
+    <p class="sub">
+      Enter or select a payment amount to see how long it would take to pay off your <strong>current balance</strong>.
+      <br>(For research demo only — no data collected.)
+    </p>
   </header>
 
   <main class="card" role="region" aria-label="Calculator">
     <!-- Payment Options -->
     <section aria-labelledby="options-title">
-      <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">Payment Amount</h2>
+      <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">Choose Your Monthly Payment Amount</h2>
       <!-- Updated balance options (Oct 2025 study version) -->
       <label><input type="radio" name="payOption" value="1836.90"> Statement Balance (as of 10/1/25): $1836.90</label>
       <label><input type="radio" name="payOption" value="1875.11"> Current Balance (as of 10/1/25): $1875.11</label>
@@ -53,32 +57,45 @@
 
       <!-- Other Amount -->
       <label>
-        <input type="radio" name="payOption" value="other"> Other Amount ($)
-        <input id="paymentInput" type="number" min="0" max="1875.11" step="1" value="500" />
+        <input type="radio" name="payOption" value="other"> Other Amount (Must be greater than $38):
+        <input id="paymentInput" type="number" min="38" max="1875.11" step="1" value="500" />
       </label>
 
       <!-- Hidden slider box -->
       <div class="slider-box" id="sliderBox">
-        <p>If you pay <strong>$<span id="descPayment">500</span></strong> a month and make no more charges you will pay off this balance in approx. <strong><span id="descYears">—</span> years</strong> for a total of <strong>$<span id="descTotal">—</span></strong>.</p>
-        <input id="paymentRange" type="range" min="0" max="3000" step="10" value="500" />
+        <p>If you pay <strong>$<span id="descPayment">500</span></strong> each month and make no new charges, you will pay 
+          off your current balance in about <strong><span id="descYears">—</span> years</strong>, for a total payment of
+          <strong>$<span id="descTotal">—</span></strong>.</p>
+        <input id="paymentRange" type="range" min="38" max="1875.11" step="10" value="500" />
       </div>
     
-
+      <!-- Bank account & due-date details removed per Oct 2025 study version -->
       <!-- Extra Info -->
       <div class="extra-info">
         <p><strong>Pay from:</strong> Bank of America Checking ****1234</p>
         <p><strong>Payment due:</strong> 05/20/2024</p>
         <p><strong>Payment date:</strong> 04/24/2014</p>
-      </div>
+      </div> -->
     </section>
 
     <!-- Results -->
     <section aria-labelledby="results-title">
-      <h2 id="results-title" style="margin:16px 0 8px; font-size:1.1rem;">Results</h2>
-      <div class="results" role="status" aria-live="polite">
-        <div class="stat"><div class="k">Years to Pay Off</div><div class="v" id="yearsOut">—</div></div>
-        <div class="stat"><div class="k">Total Balance After Interest</div><div class="v" id="totalOut">—</div></div>
-      </div>
+      <h2 id="results-title" style="margin:16px 0 8px; font-size:1.1rem;">Estimated Payoff Summary</h2>
+        <div class="results" role="status" aria-live="polite">
+          <div class="stat">
+            <div class="k">Estimated Time to Pay Off</div>
+            <div class="v" id="yearsOut">—</div>
+          </div>
+          <div class="stat">
+            <div class="k">Total Amount Paid (Principal + Interest)</div>
+            <div class="v" id="totalOut">—</div>
+          </div>
+        </div>
+      <p style="font-size:0.9rem; color:#6b7280; margin-top:6px;">
+        *Calculations assume a 21% annual interest rate and no additional charges.
+      </p>
+
+
       <!-- <div class="bar">
         <div class="lab"><span>Progress toward payoff</span><span id="progLabel">0%</span></div>
         <div class="track"><div class="fill" id="fill"></div></div>
@@ -176,8 +193,12 @@
     sliderHelp.setAttribute('aria-expanded', String(isHidden));
   });
 
-  // start with slider reference based on current balance; no default choice
-  render(+paymentInput.value || CURRENT_BALANCE);
+  // --- Optional: Wait for user interaction before showing results ---
+  // This keeps the screen blank ("—") until someone selects a payment or moves the slider.
+  // The first render() call will come from the event listeners below.
+  window.addEventListener('DOMContentLoaded', () => {
+    // Do nothing on load — wait for user input to trigger render()
+  });
 </script>
 </body>
 </html>
