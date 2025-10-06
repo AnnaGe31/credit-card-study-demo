@@ -185,7 +185,7 @@
         </label>
         <label>
           <input type="radio" name="payOption" value="1875.11">
-          Current Balance (as of 10/1/25): $1875.11
+          Current Balance: $1875.11
         </label>
         <label>
           <input type="radio" name="payOption" value="38.00">
@@ -204,8 +204,7 @@
       <div class="slider-box" id="sliderBox">
         <p>
           If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges,
-          you will pay off your current balance in about
-          <strong><span id="descYears">—</span> years</strong>,
+          you will pay off your current balance in <strong><span id="descYears">—</span></strong>,
           for a total payment of <strong>$<span id="descTotal">—</span></strong>.
         </p>
         <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
@@ -275,27 +274,49 @@
   const descTotal    = document.getElementById('descTotal');
 
   // --- Updated payoff formula (uses amortization logic) ---
-  function compute(payment){
-    const balance = CURRENT_BALANCE;
-    const monthlyPayment = Math.max(0, Number(payment) || 0);
+  function render(payment){
+    if (!payment || isNaN(payment) || payment <= 0) return;
 
-    // prevent infinite debt if payment ≤ interest
-    if (monthlyPayment <= balance * MONTHLY_RATE) {
-      return { pay: monthlyPayment, years: Infinity, total: Infinity };
-    }  
+    const { pay, years, total } = compute(payment);
+    updateDisplay(pay, total);
 
-    // if payment covers the entire balance, treat as instant payoff
-    if (monthlyPayment >= balance) {
-      return { pay: monthlyPayment, years: 0, total: balance };
+    if (!isFinite(years)) {
+      yearsOut.textContent = "—";
+      descYears.textContent = "—";
+      return;
     }
 
-    // amortization logic
-    const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) /
-                 Math.log(1 + MONTHLY_RATE);
-    const years = months / 12;
-    const total = monthlyPayment * months;
+    // Convert to months (rounded up)
+    const totalMonths = Math.ceil(years * 12);
+    let timeText = "";
 
-    return { pay: monthlyPayment, years, total };
+    if (totalMonths < 12) {
+      // Only months
+      timeText = totalMonths === 1 ? "1 month" : `${totalMonths} months`;
+    } else {
+      // Years + remaining months
+      const wholeYears = Math.floor(totalMonths / 12);
+      const remainingMonths = totalMonths % 12;
+      if (remainingMonths === 0) {
+        timeText = wholeYears === 1 ? "1 year" : `${wholeYears} years`;
+      } else {
+        const yearLabel = wholeYears === 1 ? "year" : "years";
+        const monthLabel = remainingMonths === 1 ? "month" : "months";
+        timeText = `${wholeYears} ${yearLabel} and ${remainingMonths} ${monthLabel}`;
+      }
+    }
+  
+    // Update main summary box
+    yearsOut.textContent = timeText;
+  
+    // Sentence phrasing (remove “about” for simple cases)
+    if (timeText.startsWith("0")) {
+      descYears.textContent = "immediately";
+    } else if (timeText === "1 month") {
+      descYears.textContent = timeText;
+    } else {
+      descYears.textContent = `about ${timeText}`;
+    }
   }
 
   // function sendToQualtrics(payment) {
@@ -317,24 +338,41 @@
 
   function render(payment){
     if (!payment || isNaN(payment) || payment <= 0) return;
-  
-    const { pay, years, total } = compute(payment);
 
-    // Update slider and number input + displayed values
+    const { pay, years, total } = compute(payment);
     updateDisplay(pay, total);
 
-    // Handle payoff text
-    if (pay >= CURRENT_BALANCE * 0.999) {
-      yearsOut.textContent = "Paid Off (100%)";
-      descYears.textContent = "0";
-    } else if (!isFinite(years)) {
+    if (!isFinite(years)) {
       yearsOut.textContent = "—";
       descYears.textContent = "—";
+      return;
+    }
+
+    // Convert to months and round up
+    const months = Math.ceil(years * 12);
+
+    // Create natural text phrasing
+    let timeText = "";
+    if (months === 0) {
+      timeText = "0 months";
+    } else if (months === 1) {
+      timeText = "1 month";
     } else {
-      yearsOut.textContent = `${years.toFixed(2)} yrs`;
-      descYears.textContent = years.toFixed(2);
+      timeText = `${months} months`;
+    }
+
+    // Update main summary (large box)
+    yearsOut.textContent = timeText;
+
+    // Update description above the slider with or without "about"
+    if (months <= 1) {
+      // drop "about" for 0 or 1 month
+      descYears.textContent = timeText;
+    } else {
+      descYears.textContent = `about ${timeText}`;
     }
   }
+
 
   // --- Event Listeners (re-added and simplified) ---
 
@@ -345,11 +383,21 @@
     render(val);
   });
 
-  // Number input updates results dynamically
+  // Update live preview while typing (no auto-format)
   paymentInput.addEventListener('input', e => {
-    if (!e.target.value) return;
-    render(+e.target.value);
+    const val = parseFloat(e.target.value);
+    if (isNaN(val)) return;
+    render(val);
   });
+
+  // Format only when user finishes typing or leaves the field
+  paymentInput.addEventListener('blur', e => {
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val)) {
+      e.target.value = val.toFixed(2);
+    }
+  });
+
 
   // Radio buttons trigger render when selected
   document.querySelectorAll('input[name="payOption"]').forEach(radio => {
