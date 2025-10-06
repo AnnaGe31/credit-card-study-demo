@@ -287,7 +287,7 @@
   }
 
   // --- Updated payoff formula (uses amortization logic) ---
-  function render(payment){
+  function render(payment) {
     if (!payment || isNaN(payment) || payment <= 0) return;
 
     const { pay, years, total } = compute(payment);
@@ -299,17 +299,21 @@
       return;
     }
 
-    // Convert to months
+    // Convert to months (rounded up)
     const totalMonths = Math.ceil(years * 12);
     let timeText = "";
 
-    if (totalMonths < 12) {
+    if (totalMonths <= 0) {
+      // Exact full payment — show 0 months
+      timeText = "0 months";
+    } else if (totalMonths < 12) {
       // Only months
       timeText = totalMonths === 1 ? "1 month" : `${totalMonths} months`;
     } else {
       // Years + remaining months
       const wholeYears = Math.floor(totalMonths / 12);
       const remainingMonths = totalMonths % 12;
+  
       if (remainingMonths === 0) {
         timeText = wholeYears === 1 ? "1 year" : `${wholeYears} years`;
       } else {
@@ -318,19 +322,13 @@
         timeText = `${wholeYears} ${yearLabel} and ${remainingMonths} ${monthLabel}`;
       }
     }
-
-    // Update main summary box
+  
+    // Unified updates for both displays
     yearsOut.textContent = timeText;
-
-    // Sentence phrasing
-    if (timeText.startsWith("0")) {
-      descYears.textContent = "0 month";
-    } else if (timeText === "1 month") {
-      descYears.textContent = timeText;
-    } else {
-      descYears.textContent = `about ${timeText}`;
-    }
+    descYears.textContent =
+      totalMonths <= 1 ? timeText : `about ${timeText}`;
   }
+
 
 
   // function sendToQualtrics(payment) {
