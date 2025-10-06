@@ -254,6 +254,8 @@
 </div>
 
 <script>
+  let isTyping = false;
+  
   // --- Constants (Oct 2025 update) ---
   const STATEMENT_BALANCE = 1836.90;
   const CURRENT_BALANCE   = 1875.11;  // slider denominator / payoff base
@@ -345,7 +347,9 @@
     descPayment.textContent = formattedPay;
     descTotal.textContent   = formattedTotal;
     paymentRange.value      = Math.min(pay, CURRENT_BALANCE).toFixed(2);
-    paymentInput.value      = formattedPay;
+
+    // 🛑 Only update the input if the user isn't typing
+    if (!isTyping) paymentInput.value = formattedPay;
   }
 
   // --- Event Listeners (re-added and simplified) ---
@@ -357,21 +361,26 @@
     render(val);
   });
 
-  // Update live preview while typing (no auto-format)
-  paymentInput.addEventListener('input', e => {
-    const val = parseFloat(e.target.value);
-    if (isNaN(val)) return;
-    render(val);
+  // Start typing
+  paymentInput.addEventListener('focus', () => {
+    isTyping = true;
   });
 
-  // Format only when user finishes typing or leaves the field
+  // Update live preview without formatting
+  paymentInput.addEventListener('input', e => {
+    const val = parseFloat(e.target.value);
+    if (!isNaN(val)) render(val);
+  });
+
+  // Stop typing (user done)
   paymentInput.addEventListener('blur', e => {
+    isTyping = false;
     const val = parseFloat(e.target.value);
     if (!isNaN(val)) {
       e.target.value = val.toFixed(2);
+      render(val); // update final formatted value
     }
   });
-
 
   // Radio buttons trigger render when selected
   document.querySelectorAll('input[name="payOption"]').forEach(radio => {
