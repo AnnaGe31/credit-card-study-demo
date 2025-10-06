@@ -273,6 +273,17 @@
   const descYears    = document.getElementById('descYears');
   const descTotal    = document.getElementById('descTotal');
 
+  function compute(payment){
+    const balance = CURRENT_BALANCE;
+    const monthlyPayment = Math.max(0, Number(payment) || 0);
+    if (monthlyPayment <= balance * MONTHLY_RATE) return { pay: monthlyPayment, years: Infinity, total: Infinity };
+    if (monthlyPayment >= balance) return { pay: monthlyPayment, years: 0, total: balance };
+    const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) / Math.log(1 + MONTHLY_RATE);
+    const years = months / 12;
+    const total = monthlyPayment * months;
+    return { pay: monthlyPayment, years, total };
+  }
+
   // --- Updated payoff formula (uses amortization logic) ---
   function render(payment){
     if (!payment || isNaN(payment) || payment <= 0) return;
@@ -286,7 +297,7 @@
       return;
     }
 
-    // Convert to months (rounded up)
+    // Convert to months
     const totalMonths = Math.ceil(years * 12);
     let timeText = "";
 
@@ -305,11 +316,11 @@
         timeText = `${wholeYears} ${yearLabel} and ${remainingMonths} ${monthLabel}`;
       }
     }
-  
+
     // Update main summary box
     yearsOut.textContent = timeText;
-  
-    // Sentence phrasing (remove “about” for simple cases)
+
+    // Sentence phrasing
     if (timeText.startsWith("0")) {
       descYears.textContent = "immediately";
     } else if (timeText === "1 month") {
@@ -318,6 +329,7 @@
       descYears.textContent = `about ${timeText}`;
     }
   }
+
 
   // function sendToQualtrics(payment) {
   //   if (window.parent && window.parent.postMessage) {
@@ -335,44 +347,6 @@
     paymentRange.value      = Math.min(pay, CURRENT_BALANCE).toFixed(2);
     paymentInput.value      = formattedPay;
   }
-
-  function render(payment){
-    if (!payment || isNaN(payment) || payment <= 0) return;
-
-    const { pay, years, total } = compute(payment);
-    updateDisplay(pay, total);
-
-    if (!isFinite(years)) {
-      yearsOut.textContent = "—";
-      descYears.textContent = "—";
-      return;
-    }
-
-    // Convert to months and round up
-    const months = Math.ceil(years * 12);
-
-    // Create natural text phrasing
-    let timeText = "";
-    if (months === 0) {
-      timeText = "0 months";
-    } else if (months === 1) {
-      timeText = "1 month";
-    } else {
-      timeText = `${months} months`;
-    }
-
-    // Update main summary (large box)
-    yearsOut.textContent = timeText;
-
-    // Update description above the slider with or without "about"
-    if (months <= 1) {
-      // drop "about" for 0 or 1 month
-      descYears.textContent = timeText;
-    } else {
-      descYears.textContent = `about ${timeText}`;
-    }
-  }
-
 
   // --- Event Listeners (re-added and simplified) ---
 
@@ -405,12 +379,15 @@
       if (radio.value === 'other') {
         const val = +paymentInput.value;
         if (!val) return; // only update once number entered
+        paymentRange.value = val; // 🆕 sync slider to “Other” input value
         render(val);
       } else {
+        paymentRange.value = radio.value; // 🆕 sync slider thumb to selected amount
         render(+radio.value);
       }
     });
   });
+
 
   // sliderHelp.addEventListener('click', () => {
   //   const isHidden = window.getComputedStyle(sliderBox).display === 'none';
