@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Credit Card Payment Demo</title>
 
@@ -242,26 +241,12 @@
         *Calculations assume a 21% annual interest rate and no additional charges.
       </p>
 
-      
-      <!-- <div class="bar">
+      <!--
+      <div class="bar">
         <div class="lab"><span>Progress toward payoff</span><span id="progLabel">0%</span></div>
         <div class="track"><div class="fill" id="fill"></div></div>
-      </div> -->
-
-      <!-- Graph Visualizations -->
-    <div class="graph-section" style="margin-top:20px;">
-      <h3 style="margin-bottom:8px; font-size:1rem;">Visual Breakdown</h3>
-      <div style="display:flex; gap:20px; flex-wrap:wrap;">
-        <div style="flex:1; min-width:300px;">
-          <canvas id="balanceChart" height="200"></canvas>
-        </div>
-        <div style="flex:1; min-width:300px;">
-          <canvas id="stackedChart" height="200"></canvas>
-        </div>
       </div>
-    </div>
-
-    
+      -->
     </section>
   </main>
 
@@ -423,117 +408,6 @@
   window.addEventListener('DOMContentLoaded', () => {     
     // Do nothing on load — wait for user input to trigger render()
   });
-  
-  // --- Interactive charts ---
-  let balanceChart, stackedChart;
-
-  function updateCharts(payment) {
-  const { pay, years, total } = compute(payment);
-  if (!isFinite(years)) return;
-
-  // simulate payoff progression (12*years months)
-  const months = Math.ceil(years * 12);
-  const labels = Array.from({ length: months }, (_, i) => i + 1);
-
-  // amortization-like declining balance
-  let balance = CURRENT_BALANCE;
-  const monthlyRate = MONTHLY_RATE;
-  const balances = [];
-  const principalParts = [];
-  const interestParts = [];
-
-  for (let m = 1; m <= months; m++) {
-    const interest = balance * monthlyRate;
-    const principal = Math.min(pay - interest, balance);
-    balance -= principal;
-    balances.push(balance);
-    principalParts.push(principal);
-    interestParts.push(interest);
-  }
-
-  // Balance Line Chart
-  const lineData = {
-    labels,
-    datasets: [{
-      label: "Remaining Balance",
-      data: balances,
-      borderColor: "#8A100B",
-      borderWidth: 2,
-      tension: 0.2,
-      fill: false
-    }]
-  };
-  const lineOpts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: ctx => `$${ctx.parsed.y.toFixed(2)}` } }
-    },
-    scales: {
-      x: {
-        title: { 
-          display: true, 
-          text: "Month", 
-          font: { weight: 'bold' } 
-        }
-      },
-      y: { 
-        ticks: { callback: v => `$${v.toFixed(0)}` } 
-      }
-    }
-  };
-
-  // Stacked Payment Chart
-  const stackedData = {
-    labels,
-    datasets: [
-      { label: "Interest", data: interestParts, backgroundColor: "#EAAA00" },
-      { label: "Principal", data: principalParts, backgroundColor: "#8A100B" }
-    ]
-  };
-  const stackedOpts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}` } } },
-    scales: {
-      x: { stacked: true, title: { display: true, text: "Month" } },
-      y: { stacked: true, ticks: { callback: v => `$${v}` } }
-    }
-  };
-
-  const balCtx = document.getElementById("balanceChart").getContext("2d");
-  const stkCtx = document.getElementById("stackedChart").getContext("2d");
-
-  if (balanceChart) balanceChart.destroy();
-  if (stackedChart) stackedChart.destroy();
-
-  balanceChart = new Chart(balCtx, { type: "line", data: lineData, options: lineOpts });
-  stackedChart = new Chart(stkCtx, { type: "bar", data: stackedData, options: stackedOpts });
-}
-
-// Modify your render() to call updateCharts() at the end:
-function render(payment) {
-  if (!payment || isNaN(payment) || payment <= 0) return;
-  const { pay, years, total } = compute(payment);
-  updateDisplay(pay, total);
-
-  if (!isFinite(years)) {
-    yearsOut.textContent = "—";
-    descYears.textContent = "—";
-    return;
-  }
-
-  const totalMonths = Math.ceil(years * 12);
-  let timeText = totalMonths < 12
-    ? `${totalMonths} month${totalMonths > 1 ? 's' : ''}`
-    : `${Math.floor(totalMonths / 12)} yr ${totalMonths % 12} mo`;
-  yearsOut.textContent = timeText;
-  descYears.textContent = `about ${timeText}`;
-
-  updateCharts(payment);
-}
-
 </script>
 </body>
 </html>
