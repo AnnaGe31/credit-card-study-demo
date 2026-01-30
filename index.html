@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en"> 
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -126,22 +126,6 @@
     text-align:center; 
   }
   
-  /* .help-icon{ 
-    display:inline-block; 
-    margin-left:6px; 
-    background:#ccc; 
-    color:#000; 
-    font-weight:800; 
-    border-radius:50%; 
-    width:20px; 
-    height:20px; 
-    line-height:20px; 
-    text-align:center; 
-    cursor:pointer; 
-    border:none; 
-    font-size:.9rem; 
-  } */
-  
   .slider-box{ 
     display:block; 
     margin-top:8px; 
@@ -150,17 +134,8 @@
     border:1px solid #ddd; 
     border-radius:8px; 
   }
-
-  /* .extra-info{ 
-    margin-top:15px; 
-    font-size:0.95rem; 
-  }
-  .extra-info p{ 
-    margin:4px 0; 
-  } */
 </style>
 
-<!-- Main Body  -->
 </head>
 <body>
 <div class="wrap">
@@ -197,6 +172,9 @@
           <input type="radio" name="payOption" value="other">
           Other Amount (Must be greater than $38):
           <input id="paymentInput" type="number" min="38" max="1875.11" step="0.01" placeholder="Enter amount" />
+          <div id="errorMessage" style="color: #dc2626; font-size: 0.85rem; margin-top: 4px; display: none; font-weight: normal;">
+            ⚠️ Payment must be at least $38.00 (the minimum payment due)
+          </div>
         </label>
       </div>
 
@@ -209,16 +187,6 @@
         </p>
         <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
       </div>
-    
-      <!-- Bank account & due-date details removed per Oct 2025 study version -->
-      <!-- Extra Info -->
-      <!--
-      <div class="extra-info">
-        <p><strong>Pay from:</strong> Bank of America Checking ****1234</p>
-        <p><strong>Payment due:</strong> 05/20/2024</p>
-        <p><strong>Payment date:</strong> 04/24/2014</p>
-      </div>
-      -->
 
     </section>
 
@@ -240,13 +208,6 @@
       <p style="font-size:0.9rem; color:#6b7280; margin-top:6px;">
         *Calculations assume a 21% annual interest rate and no additional charges.
       </p>
-
-      <!--
-      <div class="bar">
-        <div class="lab"><span>Progress toward payoff</span><span id="progLabel">0%</span></div>
-        <div class="track"><div class="fill" id="fill"></div></div>
-      </div>
-      -->
     </section>
   </main>
 
@@ -267,13 +228,11 @@
   const paymentInput = document.getElementById('paymentInput');
   const yearsOut     = document.getElementById('yearsOut');
   const totalOut     = document.getElementById('totalOut');
-  // const fillEl       = document.getElementById('fill');
-  // const progLabel    = document.getElementById('progLabel');
   const sliderBox    = document.getElementById('sliderBox');
-  // const sliderHelp   = document.getElementById('sliderHelp');
   const descPayment  = document.getElementById('descPayment');
   const descYears    = document.getElementById('descYears');
   const descTotal    = document.getElementById('descTotal');
+  const errorMessage = document.getElementById('errorMessage');
 
   function compute(payment){
     const balance = CURRENT_BALANCE;
@@ -286,7 +245,26 @@
     return { pay: monthlyPayment, years, total };
   }
 
-  // --- Updated payoff formula (uses amortization logic) ---
+  function updateDisplay(pay, total) {
+    const formattedPay = pay.toFixed(2);
+    const formattedTotal = total.toFixed(2);
+
+    totalOut.textContent    = `$${formattedTotal}`;
+    descPayment.textContent = formattedPay;
+    descTotal.textContent   = formattedTotal;
+
+    // keep slider synced (cap at balance for a clean thumb position)
+    paymentRange.value = Math.min(pay, CURRENT_BALANCE).toFixed(2);
+
+    // Only update the input when:
+    // 1) user isn't typing, and
+    // 2) "Other Amount" is selected
+    const otherRadio = document.querySelector('input[name="payOption"][value="other"]');
+    if (!isTyping && otherRadio && otherRadio.checked) {
+      paymentInput.value = formattedPay;
+    }
+  }
+
   function render(payment) {
     if (!payment || isNaN(payment) || payment <= 0) return;
 
@@ -299,21 +277,17 @@
       return;
     }
 
-    // Convert to months (rounded up)
     const totalMonths = Math.ceil(years * 12);
     let timeText = "";
 
     if (totalMonths <= 0) {
-      // Exact full payment — show 0 months
       timeText = "0 months";
     } else if (totalMonths < 12) {
-      // Only months
       timeText = totalMonths === 1 ? "1 month" : `${totalMonths} months`;
     } else {
-      // Years + remaining months
       const wholeYears = Math.floor(totalMonths / 12);
       const remainingMonths = totalMonths % 12;
-  
+
       if (remainingMonths === 0) {
         timeText = wholeYears === 1 ? "1 year" : `${wholeYears} years`;
       } else {
@@ -322,35 +296,10 @@
         timeText = `${wholeYears} ${yearLabel} and ${remainingMonths} ${monthLabel}`;
       }
     }
-  
-    // Unified updates for both displays
+
     yearsOut.textContent = timeText;
-    descYears.textContent =
-      totalMonths <= 1 ? timeText : `about ${timeText}`;
+    descYears.textContent = totalMonths <= 1 ? timeText : `about ${timeText}`;
   }
-
-
-
-  // function sendToQualtrics(payment) {
-  //   if (window.parent && window.parent.postMessage) {
-  //     window.parent.postMessage({ type: "paymentChoice", value: payment }, "*");
-  //   }
-  // }
-
-  function updateDisplay(pay, total) {
-    const formattedPay = pay.toFixed(2);
-    const formattedTotal = total.toFixed(2);
-
-    totalOut.textContent   = `$${formattedTotal}`;
-    descPayment.textContent = formattedPay;
-    descTotal.textContent   = formattedTotal;
-    paymentRange.value      = Math.min(pay, CURRENT_BALANCE).toFixed(2);
-
-    // 🛑 Only update the input if the user isn't typing
-    if (!isTyping) paymentInput.value = formattedPay;
-  }
-
-  // --- Event Listeners (re-added and simplified) ---
 
   // Slider updates results dynamically
   paymentRange.addEventListener('input', e => {
@@ -359,53 +308,72 @@
     render(val);
   });
 
-  // Start typing
-  paymentInput.addEventListener('focus', () => {
-    isTyping = true;
-  });
+  // Track typing state
+  paymentInput.addEventListener('focus', () => { isTyping = true; });
 
-  // Update live preview without formatting
   paymentInput.addEventListener('input', e => {
+    // Auto-select "Other Amount" when typing
+    const otherRadio = document.querySelector('input[name="payOption"][value="other"]');
+    if (otherRadio && !otherRadio.checked) {
+      otherRadio.checked = true;
+    }
+
     const val = parseFloat(e.target.value);
+
+    // Enforce minimum payment (show message, don't render invalid)
+    if (!isNaN(val) && val < MIN_PAYMENT) {
+      errorMessage.style.display = 'block';
+      return;
+    } else {
+      errorMessage.style.display = 'none';
+    }
+
     if (!isNaN(val)) render(val);
   });
 
-  // Stop typing (user done)
   paymentInput.addEventListener('blur', e => {
     isTyping = false;
     const val = parseFloat(e.target.value);
+
+    // Keep the same min validation on blur
+    if (!isNaN(val) && val < MIN_PAYMENT) {
+      errorMessage.style.display = 'block';
+      return;
+    } else {
+      errorMessage.style.display = 'none';
+    }
+
     if (!isNaN(val)) {
       e.target.value = val.toFixed(2);
-      render(val); // update final formatted value
+      render(val);
     }
   });
 
-  // Radio buttons trigger render when selected
+  // Radio buttons trigger render + sync slider thumb
   document.querySelectorAll('input[name="payOption"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (radio.value === 'other') {
-        const val = +paymentInput.value;
-        if (!val) return; // only update once number entered
-        paymentRange.value = val; // 🆕 sync slider to “Other” input value
+        const val = parseFloat(paymentInput.value);
+        if (!val) return;
+
+        if (!isNaN(val) && val < MIN_PAYMENT) {
+          errorMessage.style.display = 'block';
+          return;
+        } else {
+          errorMessage.style.display = 'none';
+        }
+
+        paymentRange.value = val;
         render(val);
       } else {
-        paymentRange.value = radio.value; // 🆕 sync slider thumb to selected amount
+        errorMessage.style.display = 'none';
+        paymentRange.value = radio.value;
         render(+radio.value);
       }
     });
   });
 
-
-  // sliderHelp.addEventListener('click', () => {
-  //   const isHidden = window.getComputedStyle(sliderBox).display === 'none';
-  //   sliderBox.style.display = isHidden ? 'block' : 'none';
-  //   sliderHelp.setAttribute('aria-expanded', String(isHidden));
-  // });
-
-  // --- Wait for user interaction before showing results ---
-  // This keeps the screen blank ("—") until someone selects a payment or moves the slider.
-  // The first render() call will come from the event listeners below.
-  window.addEventListener('DOMContentLoaded', () => {     
+  window.addEventListener('DOMContentLoaded', () => {
     // Do nothing on load — wait for user input to trigger render()
   });
 </script>
