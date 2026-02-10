@@ -70,6 +70,7 @@ input[type="range"]{
 .stat .v{ 
   font-size:1.6rem; 
   font-weight:800; 
+  white-space: pre-line;
 }
 footer{ 
   margin-top:20px; 
@@ -77,11 +78,23 @@ footer{
   color:var(--muted); 
   text-align:center; 
 }
-.slider-box{ 
+.slider-box-plain{ 
   display:block; 
   margin-top:8px; 
-  padding:10px; 
-  background:#f9f9f9; 
-  border:1px solid #ddd; 
-  border-radius:8px; 
+  padding:0;
+}
+.graph-section > div {
+  width: 100%;
+}
+.chart-wrap {
+  display: flex;
+  justify-content: center;
+}
+.chart-box {
+  width: 66%;
+  height: 280px;
+}
+.chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
