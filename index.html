@@ -12,7 +12,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Credit Card Payment Calculator</h1>
+    <h1>Credit Card Payment Decision</h1>
     <p class="sub">
       Click a payment option to view the total payoff time and total payment amount. Afterwards, please make your payment choice below this calculator.
     </p>
@@ -22,7 +22,7 @@
     <!-- Payment Options -->
     <section aria-labelledby="options-title">
       <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">
-        Choose Your Monthly Payment Amount
+        Monthly Payment Amount Options
       </h2>
 
       <div class="options">
@@ -48,17 +48,19 @@
         </label>
       </div>
 
-      <!-- Slider box -->
-      <h2 id="options-title" style="margin:0 0 8px; font-size:1.1rem;">
-        Use the Slider to Find Out Details of Your Payment ⬇️
-      </h2>
-      <div class="slider-box" id="sliderBox">
-        <p>
-          If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges,
-          you will pay off your current balance in <strong><span id="descYears">—</span></strong>,
-          for a total payment of <strong>$<span id="descTotal">—</span></strong>.
-        </p>
-        <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
+      <!-- Slider section with extra spacing -->
+      <div style="margin-top: 24px;">
+        <h2 style="margin:0 0 8px; font-size:1.1rem;">
+          Use the Slider to View Details of Your Payment
+        </h2>
+        <div class="slider-box-plain">
+          <p>
+            If you pay <strong>$<span id="descPayment">-</span></strong> each month and make no new charges,
+            you will pay off your current balance in <strong><span id="descYears">—</span></strong>,
+            for a total payment of <strong>$<span id="descTotal">—</span></strong>.
+          </p>
+          <input id="paymentRange" type="range" min="38" max="1875.11" step="0.01" value="38" />
+        </div>
       </div>
 
     </section>
@@ -90,7 +92,7 @@
 <script>
   let isTyping = false;
   
-  // --- Constants (Oct 2025 update) ---
+  // --- Constants ---
   const STATEMENT_BALANCE = 1836.90;
   const CURRENT_BALANCE   = 1875.11;
   const MIN_PAYMENT       = 38.00;
@@ -101,7 +103,6 @@
   const paymentInput = document.getElementById('paymentInput');
   const yearsOut     = document.getElementById('yearsOut');
   const totalOut     = document.getElementById('totalOut');
-  const sliderBox    = document.getElementById('sliderBox');
   const descPayment  = document.getElementById('descPayment');
   const descYears    = document.getElementById('descYears');
   const descTotal    = document.getElementById('descTotal');
@@ -109,12 +110,12 @@
   function compute(payment){
     const balance = CURRENT_BALANCE;
     const monthlyPayment = Math.max(0, Number(payment) || 0);
-    if (monthlyPayment <= balance * MONTHLY_RATE) return { pay: monthlyPayment, years: Infinity, total: Infinity };
-    if (monthlyPayment >= balance) return { pay: monthlyPayment, years: 0, total: balance };
+    if (monthlyPayment <= balance * MONTHLY_RATE) return { pay: monthlyPayment, years: Infinity, total: Infinity, months: Infinity };
+    if (monthlyPayment >= balance) return { pay: monthlyPayment, years: 0, total: balance, months: 1 };
     const months = Math.log(monthlyPayment / (monthlyPayment - MONTHLY_RATE * balance)) / Math.log(1 + MONTHLY_RATE);
     const years = months / 12;
     const total = monthlyPayment * months;
-    return { pay: monthlyPayment, years, total };
+    return { pay: monthlyPayment, years, total, months };
   }
 
   function updateDisplay(pay, total) {
@@ -136,7 +137,7 @@
   function render(payment) {
     if (!payment || isNaN(payment) || payment <= 0) return;
 
-    const { pay, years, total } = compute(payment);
+    const { pay, years, total, months } = compute(payment);
     updateDisplay(pay, total);
 
     if (!isFinite(years)) {
@@ -145,24 +146,26 @@
       return;
     }
 
-    const totalMonths = Math.ceil(years * 12);
+    const totalMonths = Math.ceil(months);
     let timeText = "";
 
     if (totalMonths <= 0) {
       timeText = "0 months";
+    } else if (totalMonths === 1) {
+      timeText = "1 month";
     } else if (totalMonths < 12) {
-      timeText = totalMonths === 1 ? "1 month" : `${totalMonths} months`;
+      timeText = `${totalMonths} months`;
     } else {
       const wholeYears = Math.floor(totalMonths / 12);
       const remainingMonths = totalMonths % 12;
       if (remainingMonths === 0) {
         timeText = wholeYears === 1 ? "1 year" : `${wholeYears} years`;
       } else {
-        timeText = `${wholeYears} years and ${remainingMonths} months`;
+        timeText = `${wholeYears} ${wholeYears === 1 ? 'year' : 'years'} and ${remainingMonths} ${remainingMonths === 1 ? 'month' : 'months'}`;
       }
     }
 
-    yearsOut.textContent = totalMonths <= 12 ? timeText : `${timeText} (${totalMonths} months)`;
+    yearsOut.textContent = totalMonths <= 12 ? timeText : `${timeText}\n(${totalMonths} months)`;
     descYears.textContent = totalMonths <= 1 ? timeText : `about ${timeText}`;
   }
 
